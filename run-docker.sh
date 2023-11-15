@@ -56,10 +56,10 @@ if [ -z "$PLATFORM_REPO_PATHS" ];then
   recho "This is required to be able to use Alveo PCIe cards."
 fi
 
-DOCKER_GID=$(id -g)
+DOCKER_GID=1001
 DOCKER_GNAME=$(id -gn)
 DOCKER_UNAME=$(id -un)
-DOCKER_UID=$(id -u)
+DOCKER_UID=1001
 DOCKER_PASSWD="finn"
 DOCKER_INST_NAME="finn_dev_${DOCKER_UNAME}"
 # ensure Docker inst. name is all lowercase
@@ -67,7 +67,7 @@ DOCKER_INST_NAME=$(echo "$DOCKER_INST_NAME" | tr '[:upper:]' '[:lower:]')
 # Absolute path to this script, e.g. /home/user/bin/foo.sh
 SCRIPT=$(readlink -f "$0")
 # Absolute path this script is in, thus /home/user/bin
-SCRIPTPATH=$(dirname "$SCRIPT")
+SCRIPTPATH=/home/finn_user/finn
 
 # the settings below will be taken from environment variables if available,
 # otherwise the defaults below will be used
@@ -94,7 +94,7 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 : ${FINN_DOCKER_GPU="$(docker info | grep nvidia | wc -m)"}
 : ${FINN_DOCKER_EXTRA=""}
 : ${FINN_SKIP_DEP_REPOS="0"}
-: ${OHMYXILINX="${SCRIPTPATH}/deps/oh-my-xilinx"}
+: ${OHMYXILINX="$SCRIPTPATH/deps/oh-my-xilinx"}
 : ${NVIDIA_VISIBLE_DEVICES=""}
 : ${DOCKER_BUILDKIT="1"}
 
@@ -191,8 +191,7 @@ DOCKER_EXEC="docker run -t --rm $DOCKER_INTERACTIVE --tty --init "
 DOCKER_EXEC+="--hostname $DOCKER_INST_NAME "
 DOCKER_EXEC+="-e SHELL=/bin/bash "
 DOCKER_EXEC+="-w $SCRIPTPATH "
-DOCKER_EXEC+="-v $SCRIPTPATH:$SCRIPTPATH "
-DOCKER_EXEC+="-v $FINN_HOST_BUILD_DIR:$FINN_HOST_BUILD_DIR "
+#DOCKER_EXEC+="-v $FINN_HOST_BUILD_DIR:$FINN_HOST_BUILD_DIR "
 DOCKER_EXEC+="-e FINN_BUILD_DIR=$FINN_HOST_BUILD_DIR "
 DOCKER_EXEC+="-e FINN_ROOT="$SCRIPTPATH" "
 DOCKER_EXEC+="-e LOCALHOST_URL=$LOCALHOST_URL "
@@ -206,12 +205,12 @@ DOCKER_EXEC+="-e OHMYXILINX=$OHMYXILINX "
 DOCKER_EXEC+="-e NUM_DEFAULT_WORKERS=$NUM_DEFAULT_WORKERS "
 # Workaround for FlexLM issue, see:
 # https://community.flexera.com/t5/InstallAnywhere-Forum/Issues-when-running-Xilinx-tools-or-Other-vendor-tools-in-docker/m-p/245820#M10647
-DOCKER_EXEC+="-e LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 "
+DOCKER_EXEC+="-e LD_PRELOAD=/usr/lib64/libudev.so.1 "
 if [ "$FINN_DOCKER_RUN_AS_ROOT" = "0" ];then
-  DOCKER_EXEC+="-v /etc/group:/etc/group:ro "
-  DOCKER_EXEC+="-v /etc/passwd:/etc/passwd:ro "
-  DOCKER_EXEC+="-v /etc/shadow:/etc/shadow:ro "
-  DOCKER_EXEC+="-v /etc/sudoers.d:/etc/sudoers.d:ro "
+  #DOCKER_EXEC+="-v /etc/group:/etc/group:ro "
+  #DOCKER_EXEC+="-v /etc/passwd:/etc/passwd:ro "
+  #DOCKER_EXEC+="-v /etc/shadow:/etc/shadow:ro "
+  #DOCKER_EXEC+="-v /etc/sudoers.d:/etc/sudoers.d:ro "
   DOCKER_EXEC+="-v $FINN_SSH_KEY_DIR:$HOME/.ssh "
   DOCKER_EXEC+="--user $DOCKER_UID:$DOCKER_GID "
 else
@@ -248,5 +247,4 @@ if [ ! -z "$FINN_XILINX_PATH" ];then
 fi
 DOCKER_EXEC+="$FINN_DOCKER_EXTRA "
 DOCKER_EXEC+="$FINN_DOCKER_TAG $DOCKER_CMD"
-
 $DOCKER_EXEC

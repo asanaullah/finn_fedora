@@ -54,39 +54,20 @@ recho () {
   echo -e "${RED}ERROR: $1${NC}"
 }
 
-# qonnx (using workaround for https://github.com/pypa/pip/issues/7953)
-# to be fixed in future Ubuntu versions (https://bugs.launchpad.net/ubuntu/+source/setuptools/+bug/1994016)
-pip install --no-build-isolation --no-warn-script-location -e ${FINN_ROOT}/deps/qonnx
-# finn-experimental
-pip install --user -e ${FINN_ROOT}/deps/finn-experimental
-# brevitas
-pip install --user -e ${FINN_ROOT}/deps/brevitas
-# pyverilator
-pip install --user -e ${FINN_ROOT}/deps/pyverilator
-
-if [ -f "${FINN_ROOT}/setup.py" ];then
-  # run pip install for finn
-  pip install --user -e ${FINN_ROOT}
-else
-  recho "Unable to find FINN source code in ${FINN_ROOT}"
-  recho "Ensure you have passed -v <path-to-finn-repo>:<path-to-finn-repo> to the docker run command"
-  exit -1
-fi
-
 if [ -f "$VITIS_PATH/settings64.sh" ];then
   # source Vitis env.vars
   export XILINX_VITIS=$VITIS_PATH
   export XILINX_XRT=/opt/xilinx/xrt
   source $VITIS_PATH/settings64.sh
   gecho "Found Vitis at $VITIS_PATH"
-  if [ -f "$XILINX_XRT/setup.sh" ];then
+  #if [ -f "$XILINX_XRT/setup.sh" ];then
     # source XRT
-    source $XILINX_XRT/setup.sh
-    gecho "Found XRT at $XILINX_XRT"
-  else
-    recho "XRT not found on $XILINX_XRT, did the installation fail?"
-    exit -1
-  fi
+  #  source $XILINX_XRT/setup.sh
+  #  gecho "Found XRT at $XILINX_XRT"
+  #else
+  #  recho "XRT not found on $XILINX_XRT, did the installation fail?"
+  #  exit -1
+  #fi
 else
   yecho "Unable to find $VITIS_PATH/settings64.sh"
   yecho "Functionality dependent on Vitis will not be available."

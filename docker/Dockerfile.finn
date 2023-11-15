@@ -26,10 +26,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-FROM ubuntu:jammy-20230126
-LABEL maintainer="Yaman Umuroglu <yamanu@xilinx.com>"
-
-ARG XRT_DEB_VERSION="xrt_202220.2.14.354_22.04-amd64-xrt"
+FROM fedora:36
 
 WORKDIR /workspace
 
@@ -38,49 +35,48 @@ WORKDIR /workspace
 ENV TZ="Europe/Dublin"
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN apt-get update && \
-    apt-get install -y \
-    build-essential \
-    libc6-dev-i386 \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
+RUN dnf update -y
+RUN dnf groupinstall -y "Development Tools" "Development Libraries"
+RUN dnf install -y \
+    glibc-devel.i686 \
+    glib2-devel \
+    libSM \
+    libSM \
+    libXext \
+    libXrender-devel \
     nano \
     zsh \
     rsync \
     git \
-    openssh-client \
+    openssh \
     sshpass \
     wget \
     sudo \
     unzip \
     zip \
-    locales \
-    lsb-core \
+    glibc-locale-source \
+    redhat-lsb-core 
+RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
+#RUN locale-gen "en_US.UTF-8"
+
+RUN dnf install -y \
     python3 \
     python-is-python3 \
     python3-pip
-RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-RUN locale-gen "en_US.UTF-8"
 
 # install Verilator from source to get the right version
-RUN apt-get install -y git perl make autoconf g++ flex bison ccache libgoogle-perftools-dev numactl perl-doc libfl2 libfl-dev zlib1g zlib1g-dev
-RUN git clone https://github.com/verilator/verilator
-RUN cd verilator && \
-    git checkout v4.224 && \
-    autoconf && \
-    ./configure && \
-    make -j4 && \
-    make install
+RUN dnf install -y git perl make autoconf g++ flex bison ccache google-perftools-devel numactl perl-doc libfl2 libfl-devel zlib zlib-devel
+
 
 # install XRT
-RUN wget https://www.xilinx.com/bin/public/openDownload?filename=$XRT_DEB_VERSION.deb -O /tmp/$XRT_DEB_VERSION.deb
-RUN apt install -y /tmp/$XRT_DEB_VERSION.deb
-RUN rm /tmp/$XRT_DEB_VERSION.deb
+#ARG XRT_DEB_VERSION="xrt_202220.2.14.354_22.04-amd64-xrt"
+#RUN wget https://www.xilinx.com/bin/public/openDownload?filename=$XRT_DEB_VERSION.deb -O /tmp/$XRT_DEB_VERSION.deb
+#RUN apt install -y /tmp/$XRT_DEB_VERSION.deb
+#RUN rm /tmp/$XRT_DEB_VERSION.deb
 
 # versioned Python package requirements for FINN compiler
 # these are given in requirements.txt
+# update the following versions in requirements.txt
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN rm requirements.txt
@@ -126,9 +122,33 @@ RUN pip install tclwrapper==0.0.1
 # extra environment variables for FINN compiler
 ENV VIVADO_IP_CACHE "/tmp/vivado_ip_cache"
 
+RUN git clone https://github.com/verilator/verilator
+RUN cd verilator && \
+    git checkout v4.224 && \
+    autoconf && \
+    ./configure && \
+    make -j4 && \
+    make install
+
 COPY docker/finn_entrypoint.sh /usr/local/bin/
 COPY docker/quicktest.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/finn_entrypoint.sh
 RUN chmod 755 /usr/local/bin/quicktest.sh
+RUN useradd -u 1001 finn_user
+
+RUN git clone --branch dev https://github.com/Xilinx/finn/ /home/finn_user/finn
+RUN source /home/finn_user/finn/fetch-repos.sh
+RUN mv /usr/bin/deps /home/finn_user/finn/deps
+RUN chmod -R 777 /home/finn_user/finn
+RUN pip install wheel
+RUN pip install --no-build-isolation --no-warn-script-location -e /home/finn_user/finn/deps/qonnx
+# finn-experimental
+RUN pip install -e /home/finn_user/finn/deps/finn-experimental
+# brevitas
+RUN pip install -e /home/finn_user/finn/deps/brevitas
+# pyverilator
+RUN pip install -e /home/finn_user/finn/deps/pyverilator
+RUN pip install -e /home/finn_user/finn
+
 ENTRYPOINT ["finn_entrypoint.sh"]
-CMD ["bash"]
+CMD ["bash"] 
