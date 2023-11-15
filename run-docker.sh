@@ -172,8 +172,13 @@ gecho "Vivado IP cache dir is at $VIVADO_IP_CACHE"
 gecho "Using default PYNQ board $PYNQ_BOARD"
 
 
-# Build the FINN Docker image
-docker build -f docker/Dockerfile.finn --build-arg XRT_DEB_VERSION=$XRT_DEB_VERSION --tag=$FINN_DOCKER_TAG .
+# Check if the FINN Docker image already exists
+if [ "$(docker images -q $FINN_DOCKER_TAG 2> /dev/null)" == "" ]; then
+  echo "Building the FINN Docker image"
+  docker build -f docker/Dockerfile.finn --build-arg XRT_DEB_VERSION=$XRT_DEB_VERSION --tag=$FINN_DOCKER_TAG .
+else
+  echo "The FINN Docker image with tag $FINN_DOCKER_TAG already exists. Skipping build."
+fi
 
 # Launch container with current directory mounted
 # important to pass the --init flag here for correct Vivado operation, see:
