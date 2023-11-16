@@ -123,13 +123,13 @@ RUN pip install tclwrapper==0.0.1
 # extra environment variables for FINN compiler
 ENV VIVADO_IP_CACHE "/tmp/vivado_ip_cache"
 
-#RUN git clone https://github.com/verilator/verilator
-#RUN cd verilator && \
-#    git checkout v4.224 && \
-#    autoconf && \
-#    ./configure && \
-#    make -j4 && \
-#    make install
+RUN git clone https://github.com/verilator/verilator
+RUN cd verilator && \
+    git checkout v4.224 && \
+    autoconf && \
+    ./configure && \
+    make -j4 && \
+    make install
 
 COPY docker/finn_entrypoint.sh /usr/local/bin/
 COPY docker/quicktest.sh /usr/local/bin/
