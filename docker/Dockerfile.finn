@@ -32,7 +32,7 @@ WORKDIR /workspace
 
 # some Vitis deps require a timezone to be specified, which hangs in Docker
 # use workaround from https://grigorkh.medium.com/fix-tzdata-hangs-docker-image-build-cdb52cc3360d
-ENV TZ="Europe/Dublin"
+ENV TZ="America/New_York"
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN dnf update -y
@@ -55,7 +55,8 @@ RUN dnf install -y \
     unzip \
     zip \
     glibc-locale-source \
-    redhat-lsb-core 
+    redhat-lsb-core \
+    glibc-langpack-en
 RUN echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 #RUN locale-gen "en_US.UTF-8"
 
@@ -122,13 +123,13 @@ RUN pip install tclwrapper==0.0.1
 # extra environment variables for FINN compiler
 ENV VIVADO_IP_CACHE "/tmp/vivado_ip_cache"
 
-RUN git clone https://github.com/verilator/verilator
-RUN cd verilator && \
-    git checkout v4.224 && \
-    autoconf && \
-    ./configure && \
-    make -j4 && \
-    make install
+#RUN git clone https://github.com/verilator/verilator
+#RUN cd verilator && \
+#    git checkout v4.224 && \
+#    autoconf && \
+#    ./configure && \
+#    make -j4 && \
+#    make install
 
 COPY docker/finn_entrypoint.sh /usr/local/bin/
 COPY docker/quicktest.sh /usr/local/bin/
