@@ -34,6 +34,7 @@
 
 import numpy as np
 import os
+import sys
 from qonnx.custom_op.registry import getCustomOp
 
 import finn.builder.build_dataflow as build
@@ -127,7 +128,7 @@ cfg = build.DataflowBuildConfig(
     output_dir="output_%s_%s" % (model_name, platform_name),
     synth_clk_period_ns=10.0,
     folding_config_file="folding_config.json",
-    fpga_part="xczu3eg-sbva484-1-e",
+    fpga_part=sys.argv[1],
     shell_flow_type=build_cfg.ShellFlowType.VIVADO_ZYNQ,
     stitched_ip_gen_dcp=False,
     generate_outputs=[
