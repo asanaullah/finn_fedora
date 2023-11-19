@@ -137,7 +137,7 @@ RUN chmod 755 /usr/local/bin/finn_entrypoint.sh
 RUN chmod 755 /usr/local/bin/quicktest.sh
 RUN useradd -u 1001 finn_user
 
-RUN git clone --branch dev https://github.com/Xilinx/finn/ /home/finn_user/finn
+RUN git clone --branch dev https://github.com/asanaullah/finn_fedora /home/finn_user/finn
 RUN source /home/finn_user/finn/fetch-repos.sh
 RUN mv /usr/bin/deps /home/finn_user/finn/deps
 RUN chmod -R 777 /home/finn_user/finn
